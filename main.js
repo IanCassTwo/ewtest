@@ -11,7 +11,7 @@ function concatenateReadables(promiseOne, promiseTwo ) {
     // fixme DRY
     promise = promiseOne.then(
       response => { 
-        response.body.pipeTo(outStream.writable, { preventClose: true })
+        response.body.pipeTo(outStream.writable, { preventClose: false })
       },
       reason => {
         return Promise.all([
@@ -40,16 +40,18 @@ function concatenateReadables(promiseOne, promiseTwo ) {
   return outStream.readable;
 }
 
-export async function responseProvider (request) {
+export function responseProvider (request) {
 
-    let promiseOne = httpRequest(`${request.scheme}://${request.host}${request.url}`)
     let promiseTwo = httpRequest(`${request.scheme}://${request.host}/static/head.fragment`)
+    let promiseOne = httpRequest(`${request.scheme}://${request.host}${request.url}`)
 
-    return createResponse(
-	200,
-	{ 
-		'Powered-By': ['Akamai EdgeWorkers'] 
-	},
-	concatenateReadables(promiseOne, promiseTwo)
+    return Promise.resolve(
+	createResponse(
+		200,
+		{ 
+			'Powered-By': ['Akamai EdgeWorkers'] 
+		},
+		concatenateReadables(promiseOne, promiseTwo)
+	)
     );
 }
