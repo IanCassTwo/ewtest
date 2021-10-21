@@ -34,8 +34,8 @@ function concatenateReadables(promiseOne, promiseTwo ) {
 
 export function responseProvider (request) {
 
-    let promiseOne = httpRequest(`${request.scheme}://${request.host}/static/head.fragment`)
-    let promiseTwo = httpRequest(`${request.scheme}://${request.host}${request.url}`)
+    let promiseOne = httpRequest(`${request.scheme}://${request.host}/head${request.url}`)
+    let promiseTwo = httpRequest(`${request.scheme}://${request.host}/body${request.url}`)
 
     return Promise.resolve(
 	createResponse(
