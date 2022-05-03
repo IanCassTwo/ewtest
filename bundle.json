@@ -1,4 +1,4 @@
 {
-    "edgeworker-version": "0.44",
+    "edgeworker-version": "0.54",
     "description" : "Concat streams"
 }
