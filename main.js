@@ -27,12 +27,13 @@ class HTMLRewriterStream extends TransformStream {
 }
 
 class BodyOnly extends HTMLRewriterStream {
-    constructor() {
+    constructor( ...args) {
 	this.emit = 0;
         super({
             startTag: (emitter, startTag, raw) => {
                 if (startTag.tagName.equals('body')) {
 			this.emit = 1;
+			emitter.emitRaw("startofbody")
                 }
                 if (this.emit) {
                    emitter.emitRaw(raw);
@@ -48,12 +49,12 @@ class BodyOnly extends HTMLRewriterStream {
                 	emitter.emitRaw(raw);
 		}
             },
-        });
+        }, ...args);
     }
 }
 
 class HeadOnly extends HTMLRewriterStream {
-    constructor() {
+    constructor(...args) {
 	this.emit = 1;
         super({
             startTag: (emitter, startTag, raw) => {
@@ -72,22 +73,22 @@ class HeadOnly extends HTMLRewriterStream {
 		}
                 if (endTag.tagName.equals('head')) {
 			this.emit = 0;
+			emitter.emitRaw("end of head")
                 }
             },
-        });
+        }, ...args);
     }
 }
 
 function concatenateReadables(promiseOne, promiseTwo ) {
   
-  let outStream = new TransformStream();
+  let outStream = new TextEncoderStream();
   promiseOne.then(
       response => { 
           response.body
-            .pipeThrough(new TextDecoderStream())
-            .pipeThrough(new HeadOnly())
-            .pipeThrough(new TextEncoderStream())
-	    .pipeTo(outStream.writable, { preventClose: true })
+            .pipeThrough(new TextDecoderStream(), { preventClose: true })
+            .pipeThrough(new HeadOnly(), { preventClose: true })
+	    .pipeThrough(outStream, { preventClose: true })
       },
       reason => {
 	return Promise.all([
@@ -101,8 +102,7 @@ function concatenateReadables(promiseOne, promiseTwo ) {
                 response.body
                     .pipeThrough(new TextDecoderStream())
                     .pipeThrough(new BodyOnly())
-                    .pipeThrough(new TextEncoderStream())
-		    .pipeTo(outStream.writable, { preventClose: false })
+		    .pipeThrough(outStream)
 	      },
 	      reason => {
 		return Promise.all([
